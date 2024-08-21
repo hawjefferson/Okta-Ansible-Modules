@@ -1,0 +1,140 @@
+---
+- name: Testing Okta modules
+  hosts: localhost
+  tasks:
+
+    - name: Create Okta group
+      okta_groups:
+        action: "create"
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        name: "Test Group"
+        description: "Test Group Description"
+      register: okta_group
+
+    - name: Create Okta user
+      okta_users:
+        action: create
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        login: "{{ login }}"
+        first_name: "First"
+        last_name: "Last"
+        activate: true
+        password: "{{ password }}"
+        group_ids:
+          - "{{ okta_group.json.id }}"
+        email: "{{ login }}"
+      register: okta_user
+
+    - name: Update Okta user
+      okta_users:
+        action: update
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_user.json.id }}"
+        email: "{{ login }}"
+      register: okta_user
+
+    - name: Create SWA app
+      okta_apps_swa:
+        action: create
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        label: "Test SWA App"
+        login_url: "{{ login_url }}"
+        redirect_url: "{{ redirect_url }}"
+      register: okta_swa_app
+
+    - name: Update SWA app
+      okta_apps_swa:
+        action: update
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        label: "Ansible Test App"
+        id: "{{ okta_swa_app.json.id }}"
+        scheme: "ADMIN_SETS_CREDENTIALS"
+      register: okta_swa_app
+
+    - name: Assign new group to new SWA app
+      okta_apps:
+        action: assign_group
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_swa_app.json.id }}"
+        group_id: "{{ okta_group.json.id }}"
+      register: okta_assignment
+
+    - name: Remove group from SWA app
+      okta_apps:
+        action: remove_group
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_swa_app.json.id }}"
+        group_id: "{{ okta_group.json.id }}"
+
+    - name: Remove SWA app
+      okta_apps:
+        action: delete
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_swa_app.json.id }}"
+
+    - name: Create SAML app
+      okta_apps_saml:
+        action: create
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        label: "Test SAML App"
+        ssoAcsUrl: "https://app.unicorns.lol/saml/acs"
+        idpIssuer: "http://www.okta.com/${org.externalKey}"
+        audience: "https://app.unicors.lol/saml/metadata"
+        recipient: "https://app.unicorns.lol/saml/acs"
+        destination: "https://app.unicorns.lol/saml/acs"
+      register: okta_saml_app
+
+    - name: Assign new group to new SAML app
+      okta_apps:
+        action: assign_group
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_saml_app.json.id }}"
+        group_id: "{{ okta_group.json.id }}"
+      register: okta_assignment
+
+    - name: Remove group from SAML app
+      okta_apps:
+        action: remove_group
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_saml_app.json.id }}"
+        group_id: "{{ okta_group.json.id }}"
+
+    - name: Remove SAML app
+      okta_apps:
+        action: delete
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_saml_app.json.id }}"
+
+    - name: Remove user from group
+      okta_groups:
+        action: remove_user
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_group.json.id }}"
+        user_id: "{{ okta_user.json.id }}"
+
+    - name: Remove group
+      okta_groups:
+        action: delete
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_group.json.id }}"
+
+    - name: Remove user
+      okta_users:
+        action: delete
+        organization: "{{ organization }}"
+        api_key: "{{ api_key }}"
+        id: "{{ okta_user.json.id }}"

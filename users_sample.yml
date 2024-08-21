@@ -1,0 +1,20 @@
+---
+- name: Testing Okta modules
+  hosts: localhost
+  
+  tasks:   
+    - name: Create Okta user
+      okta_users:
+        action: create
+        organization: "sample"
+        api_key: "api_key"
+        login: "ansible.user@test.com"
+        first_name: "First"
+        last_name: "Last"
+        activate: true
+        email: "ansible.user@test.com"
+      register: okta_user
+
+    - name: Print user information
+      debug:
+        msg: "{{ okta_user.json }}"

@@ -1,0 +1,21 @@
+---
+- name: Testing Okta modules
+  hosts: localhost
+
+  tasks:   
+    - name: Create SAML app
+      okta_apps_saml:
+        action: create
+        organization: "sample"
+        api_key: "api_key"
+        label: "Test SAML App"
+        ssoAcsUrl: "https://app.unicorns.lol/saml/acs"
+        idpIssuer: "http://www.okta.com/${org.externalKey}"
+        audience: "https://app.unicors.lol/saml/metadata"
+        recipient: "https://app.unicorns.lol/saml/acs"
+        destination: "https://app.unicorns.lol/saml/acs"
+      register: okta_saml_app
+
+    - name: Print app information
+      debug:
+        msg: "{{ okta_saml_app.json }}"
